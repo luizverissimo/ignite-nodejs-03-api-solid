@@ -1,25 +1,26 @@
 import { expect, describe, it } from 'vitest'
 import { RegisterService } from './register'
-import { PrismaUsersRepository } from '@/repositories/prisma/prisma-users-repository'
 import { compare } from 'bcryptjs'
+import { InMemoryUsersRepository } from '@/repositories/in-memory/in-memory-users-repository'
+import { UserAlreadyExistsError } from './errors/user-already-exists-error'
 
-describe('Register Sevice', () => {
-  it('should hash user password upon registration', async () => {
-    const registerService = new RegisterService({
-      async findByEmail() {
-        return null
-      },
+describe('Register Service', () => {
+  it('should be able to register', async () => {
+    const userRepository = new InMemoryUsersRepository()
+    const registerService = new RegisterService(userRepository)
 
-      async create(data) {
-        return {
-          id: 'user-1',
-          name: data.name,
-          email: data.email,
-          password_hash: data.password_hash,
-          created_at: new Date(),
-        }
-      },
+    const { user } = await registerService.execute({
+      name: 'Jhon Doe',
+      email: 'jhondoe@example.com',
+      password: '123456',
     })
+
+    expect(user.id).toEqual(expect.any(String))
+  })
+
+  it('should hash user password upon registration', async () => {
+    const userRepository = new InMemoryUsersRepository()
+    const registerService = new RegisterService(userRepository)
 
     const { user } = await registerService.execute({
       name: 'Jhon Doe',
@@ -33,5 +34,26 @@ describe('Register Sevice', () => {
     )
 
     expect(isPasswordCorrectlyHashed).toBe(true)
+  })
+
+  it('should not be able to register same email twice', async () => {
+    const userRepository = new InMemoryUsersRepository()
+    const registerService = new RegisterService(userRepository)
+
+    const email = 'jhondoe@example.com'
+
+    await registerService.execute({
+      name: 'Jhon Doe',
+      email,
+      password: '123456',
+    })
+
+    expect(async () => {
+      await registerService.execute({
+        name: 'Jhon Doe',
+        email,
+        password: '123456',
+      })
+    }).rejects.toBeInstanceOf(UserAlreadyExistsError)
   })
 })
