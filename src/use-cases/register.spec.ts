@@ -1,15 +1,19 @@
-import { expect, describe, it } from 'vitest'
-import { RegisterService } from './register'
+import { expect, describe, it, beforeEach } from 'vitest'
+import { RegisterUseCase } from './register'
 import { compare } from 'bcryptjs'
 import { InMemoryUsersRepository } from '@/repositories/in-memory/in-memory-users-repository'
 import { UserAlreadyExistsError } from './errors/user-already-exists-error'
 
-describe('Register Service', () => {
-  it('should be able to register', async () => {
-    const userRepository = new InMemoryUsersRepository()
-    const registerService = new RegisterService(userRepository)
+let userRepository: InMemoryUsersRepository
+let sut: RegisterUseCase
 
-    const { user } = await registerService.execute({
+describe('Register UseCaseRegisterUseCase', () => {
+  beforeEach(() => {
+    userRepository = new InMemoryUsersRepository()
+    sut = new RegisterUseCase(userRepository)
+  })
+  it('should be able to register', async () => {
+    const { user } = await sut.execute({
       name: 'Jhon Doe',
       email: 'jhondoe@example.com',
       password: '123456',
@@ -19,10 +23,7 @@ describe('Register Service', () => {
   })
 
   it('should hash user password upon registration', async () => {
-    const userRepository = new InMemoryUsersRepository()
-    const registerService = new RegisterService(userRepository)
-
-    const { user } = await registerService.execute({
+    const { user } = await sut.execute({
       name: 'Jhon Doe',
       email: 'jhondoe@example.com',
       password: '123456',
@@ -37,19 +38,16 @@ describe('Register Service', () => {
   })
 
   it('should not be able to register same email twice', async () => {
-    const userRepository = new InMemoryUsersRepository()
-    const registerService = new RegisterService(userRepository)
-
     const email = 'jhondoe@example.com'
 
-    await registerService.execute({
+    await sut.execute({
       name: 'Jhon Doe',
       email,
       password: '123456',
     })
 
     expect(async () => {
-      await registerService.execute({
+      await sut.execute({
         name: 'Jhon Doe',
         email,
         password: '123456',
