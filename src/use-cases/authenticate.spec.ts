@@ -7,7 +7,7 @@ import { InvalidCredentialsError } from './errors/invalid-credentials-errors'
 let userRepository: InMemoryUsersRepository
 let sut: AuthenticateUseCase
 
-describe('Register UseCase', () => {
+describe('Authenticate UseCase', () => {
   beforeEach(() => {
     userRepository = new InMemoryUsersRepository()
     sut = new AuthenticateUseCase(userRepository)
@@ -28,9 +28,6 @@ describe('Register UseCase', () => {
   })
 
   it('should not be able to authenticate with wrong email', async () => {
-    const userRepository = new InMemoryUsersRepository()
-    const sut = new AuthenticateUseCase(userRepository)
-
     expect(async () => {
       await sut.execute({
         email: 'jhondoe@example.com',
@@ -40,8 +37,6 @@ describe('Register UseCase', () => {
   })
 
   it('should not be able to authenticate with wrong password', async () => {
-    const userRepository = new InMemoryUsersRepository()
-    const sut = new AuthenticateUseCase(userRepository)
     await userRepository.create({
       name: 'Jhon Doe',
       email: 'jhondoe@example.com',
